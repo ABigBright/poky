@@ -75,7 +75,7 @@ class ProcessServer():
         self._idlefuns[function] = data
 
     def run(self):
-
+        print("%s:%d:NULL = " %(__file__, sys._getframe().f_lineno))
         if self.xmlrpcinterface[0]:
             self.xmlrpc = bb.server.xmlrpcserver.BitBakeXMLRPCServer(self.xmlrpcinterface, self.cooker, self)
 
@@ -107,11 +107,14 @@ class ProcessServer():
             serverlog("Raw profiling information saved to profile.log and processed statistics to profile.log.processed")
 
         else:
+            print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
             ret = self.main()
+            print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
 
         return ret
 
     def main(self):
+        print("%s:%d:NULL = " %(__file__, sys._getframe().f_lineno))
         self.cooker.pre_serve()
 
         bb.utils.set_process_name("Cooker")
@@ -206,6 +209,7 @@ class ProcessServer():
             if self.command_channel in ready:
                 try:
                     command = self.command_channel.get()
+                    print("%s:%d:command = " %(__file__, sys._getframe().f_lineno), command)
                 except EOFError:
                     # Client connection shutting down
                     ready = []
@@ -216,6 +220,7 @@ class ProcessServer():
                     continue
                 try:
                     serverlog("Running command %s" % command)
+                    print("%s:%d:command = " %(__file__, sys._getframe().f_lineno), command)
                     self.command_channel_reply.send(self.cooker.command.runCommand(command))
                     serverlog("Command Completed")
                 except Exception as e:
@@ -466,6 +471,7 @@ class BitBakeServer(object):
         os.close(self.readypipein)
 
         ready = ConnectionReader(self.readypipe)
+        print("%s:%d:NULL = " %(__file__, sys._getframe().f_lineno))
         r = ready.poll(5)
         if not r:
             bb.note("Bitbake server didn't start within 5 seconds, waiting for 90")
@@ -517,14 +523,18 @@ class BitBakeServer(object):
         os.set_inheritable(self.bitbake_lock.fileno(), True)
         os.set_inheritable(self.readypipein, True)
         serverscript = os.path.realpath(os.path.dirname(__file__) + "/../../../bin/bitbake-server")
+        print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
         os.execl(sys.executable, "bitbake-server", serverscript, "decafbad", str(self.bitbake_lock.fileno()), str(self.readypipein), self.logfile, self.bitbake_lock.name, self.sockname,  str(self.server_timeout or 0), str(self.xmlrpcinterface[0]), str(self.xmlrpcinterface[1]))
+        print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
 
 def execServer(lockfd, readypipeinfd, lockname, sockname, server_timeout, xmlrpcinterface):
 
     import bb.cookerdata
     import bb.cooker
 
+    print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
     serverlog(start_log_format % (os.getpid(), datetime.datetime.now().strftime(start_log_datetime_format)))
+    print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
 
     try:
         bitbake_lock = os.fdopen(lockfd, "w")
@@ -543,8 +553,11 @@ def execServer(lockfd, readypipeinfd, lockname, sockname, server_timeout, xmlrpc
             os.chdir(cwd)
         sock.listen(1)
 
+        print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
         server = ProcessServer(bitbake_lock, lockname, sock, sockname, server_timeout, xmlrpcinterface)
+        print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
         writer = ConnectionWriter(readypipeinfd)
+        print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
         try:
             featureset = []
             cooker = bb.cooker.BBCooker(featureset, server.register_idle_function)
@@ -555,7 +568,9 @@ def execServer(lockfd, readypipeinfd, lockname, sockname, server_timeout, xmlrpc
         server.cooker = cooker
         serverlog("Started bitbake server pid %d" % os.getpid())
 
+        print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
         server.run()
+        print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
     finally:
         # Flush any ,essages/errors to the logfile before exit
         sys.stdout.flush()
@@ -719,6 +734,7 @@ class ConnectionReader(object):
         return self.reader.poll(timeout)
 
     def get(self):
+        print("%s:%d:NULL = " %(__file__, sys._getframe().f_lineno))
         with self.rlock:
             res = self.reader.recv_bytes()
         return multiprocessing.reduction.ForkingPickler.loads(res)
@@ -739,6 +755,7 @@ class ConnectionWriter(object):
         self.event = self
 
     def send(self, obj):
+        print("%s:%d:NULL = " %(__file__, sys._getframe().f_lineno))
         obj = multiprocessing.reduction.ForkingPickler.dumps(obj)
         gc.disable()
         with self.wlock:

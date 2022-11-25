@@ -24,6 +24,7 @@ import io
 import bb.event
 import bb.cooker
 import bb.remotedata
+import sys
 
 class DataStoreConnectionHandle(object):
     def __init__(self, dsindex=0):
@@ -108,19 +109,24 @@ class Command:
         return True, None
 
     def runAsyncCommand(self):
+        print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
         try:
             self.cooker.process_inotify_updates()
             if self.cooker.state in (bb.cooker.state.error, bb.cooker.state.shutdown, bb.cooker.state.forceshutdown):
                 # updateCache will trigger a shutdown of the parser
                 # and then raise BBHandledException triggering an exit
+                print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
                 self.cooker.updateCache()
+                print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
                 return False
             if self.currentAsyncCommand is not None:
                 (command, options) = self.currentAsyncCommand
                 commandmethod = getattr(CommandsAsync, command)
                 needcache = getattr( commandmethod, "needcache" )
                 if needcache and self.cooker.state != bb.cooker.state.running:
+                    print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
                     self.cooker.updateCache()
+                    print("%s:%d: = " %(__file__, sys._getframe().f_lineno))
                     return True
                 else:
                     commandmethod(self.cmds_async, self, options)
